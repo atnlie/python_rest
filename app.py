@@ -1,5 +1,7 @@
 #create app route
 from flask import Flask, request, jsonify, make_response
+# from waitress import serve
+# from gevent.pywsgi import WSGIServer
 
 app = Flask(__name__)
 app.config["DEBUG"] = True
@@ -49,22 +51,37 @@ def get_countries():
             'error': f'Something went wrong because {e}'
         }), 500)
 
-@app.route("/countries/<id>", methods=['DELETE'])
+@app.route("/countries/<id>", methods=['DELETE', 'GET'])
 def remove_country(id):
     try:
-        for index, country in enumerate(countries):
-            if country["id"] == int(id):
-                countries.pop(index)
-                return make_response(jsonify({
-                    'message': "Delete country successfully",
-                    'code': 200, 
-                    'error': ''
-                }), 200)
-        return make_response(jsonify({
-            'message': "Country not found",
-            'code': 404, 
-            'error': ''
-        }), 404)
+        if request.method == "GET":
+            for country in countries:
+                if country["id"] == int(id):
+                    return make_response(jsonify({
+                        'data': country,
+                        'code': 200, 
+                        'error': ''
+                    }), 200)
+            return make_response(jsonify({
+                'message': "Country not found",
+                'code': 404, 
+                'error': ''
+            }), 404)
+        
+        elif request.method == "DELETE":
+            for index, country in enumerate(countries):
+                if country["id"] == int(id):
+                    countries.pop(index)
+                    return make_response(jsonify({
+                        'message': "Delete country successfully",
+                        'code': 200, 
+                        'error': ''
+                    }), 200)
+            return make_response(jsonify({
+                'message': "Country not found",
+                'code': 404, 
+                'error': ''
+            }), 404)
     except Exception as e:
         return make_response(jsonify({
             'data': [],
@@ -73,5 +90,6 @@ def remove_country(id):
         }), 500)
 
 app.run()
-
-
+# http_server = WSGIServer(('', 8080), app)
+# http_server.serve_forever()
+# serve(app, host="0.0.0.0", port=8080)
